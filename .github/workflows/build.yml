@@ -1,0 +1,49 @@
+# Installeurs Windows (.exe) et Mac (.dmg) de Zohri, publiés dans la Release GitHub « desktop ».
+# Dépôt public : les installeurs se téléchargent sans clé. L'app elle-même se charge depuis le serveur Zohri.
+name: Installeurs ordinateur
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            cmd: dist:win
+            file: dist/Zohri-Windows.exe
+          - os: macos-latest
+            cmd: dist:mac
+            file: dist/Zohri-Mac.dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Installer
+        working-directory: .
+        run: npm ci
+      - name: Construire
+        working-directory: .
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run ${{ matrix.cmd }}
+      - name: Publier dans la Release « desktop »
+        working-directory: .
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view desktop >/dev/null 2>&1 || gh release create desktop --title "Zohri pour ordinateur" --notes "Installeurs Windows et Mac de Zohri IPTV."
+          gh release upload desktop "${{ matrix.file }}" --clobber

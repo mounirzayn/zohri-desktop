@@ -1,0 +1,74 @@
+{
+  "name": "zohri-desktop",
+  "productName": "Zohri IPTV",
+  "version": "1.0.0",
+  "description": "Zohri IPTV pour Windows et Mac",
+  "author": "Zohri",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:mac": "electron-builder --mac --publish never"
+  },
+  "dependencies": {
+    "node-machine-id": "1.1.12"
+  },
+  "devDependencies": {
+    "electron": "44.9.3",
+    "electron-builder": "26.17.0"
+  },
+  "build": {
+    "appId": "app.zohri.iptv",
+    "productName": "Zohri IPTV",
+    "copyright": "Zohri",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "offline.html",
+      "build/icon.png"
+    ],
+    "artifactName": "Zohri-${os}-${arch}.${ext}",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Zohri IPTV",
+      "artifactName": "Zohri-Windows.exe"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.entertainment",
+      "identity": "-",
+      "artifactName": "Zohri-Mac.dmg",
+      "hardenedRuntime": false
+    },
+    "dmg": {
+      "title": "Zohri IPTV"
+    }
+  }
+}
