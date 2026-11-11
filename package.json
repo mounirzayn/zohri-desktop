@@ -1,7 +1,7 @@
 {
   "name": "zohri-desktop",
   "productName": "Zohri IPTV",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Zohri IPTV pour Windows et Mac",
   "author": "Zohri",
   "main": "main.js",

@@ -32,6 +32,14 @@ ipcMain.on('zohri:playing', (_e, on) => {
 
 function setupNetwork() {
   const ses = session.defaultSession;
+  // Aucune lecture de fichiers de l'ordinateur depuis l'app (sauf la page « pas de connexion » fournie avec l'app)
+  const OFFLINE = 'file://' + path.join(__dirname, 'offline.html').replace(/\\/g, '/');
+  ses.webRequest.onBeforeRequest({ urls: ['file://*/*'] }, (d, cb) => {
+    const ok = decodeURI(d.url).split('?')[0].replace(/^file:\/\/\/?/, 'file:///').toLowerCase() === OFFLINE.replace(/^file:\/\/\/?/, 'file:///').toLowerCase();
+    cb({ cancel: !ok });
+  });
+  // Pas d'accès caméra, micro, position... demandés par une page
+  ses.setPermissionRequestHandler((_wc, perm, cb) => cb(perm === 'fullscreen'));
   ses.webRequest.onBeforeSendHeaders((d, cb) => {
     const h = d.requestHeaders;
     let host = '';
@@ -81,14 +89,15 @@ function createWindow() {
   win.webContents.on('did-fail-load', (_e, code, _desc, url, isMain) => {
     if (isMain && code !== -3) win.loadFile(path.join(__dirname, 'offline.html'), { query: { url: APP_URL } });
   });
-  // Liens externes (paiement, site) : dans le navigateur de l'ordinateur
-  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
+  // Liens externes (paiement, site) : dans le navigateur de l'ordinateur, seulement http(s) et e-mail
+  const openOutside = (url) => { try { if (/^(https?|mailto):$/.test(new URL(url).protocol)) shell.openExternal(url); } catch {} };
+  win.webContents.setWindowOpenHandler(({ url }) => { openOutside(url); return { action: 'deny' }; });
   win.webContents.on('will-navigate', (e, url) => {
     try {
       const u = new URL(url);
-      if (u.protocol === 'file:' || (u.host === APP_HOST && u.pathname.startsWith('/app'))) return;
+      if ((u.protocol === 'file:' && u.pathname.endsWith('/offline.html')) || (u.protocol === 'https:' && u.host === APP_HOST && u.pathname.startsWith('/app'))) return;
     } catch {}
-    e.preventDefault(); shell.openExternal(url);
+    e.preventDefault(); openOutside(url);
   });
   // F11 ou Alt+Entrée : plein écran ; Ctrl+R : recharger
   win.webContents.on('before-input-event', (e, input) => {
